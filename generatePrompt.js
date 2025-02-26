@@ -33,7 +33,8 @@ const resultsPath = path.join(__dirname, 'results', 'json');
 const resultFiles = fs.readdirSync(resultsPath)
   .filter(f => f.endsWith('.json'));
 
-let performances = [];
+const horsePerformances = {};
+const jockeyPerformances = {};
 
 resultFiles.forEach(resultFile => {
   const resultData = JSON.parse(fs.readFileSync(
@@ -41,24 +42,36 @@ resultFiles.forEach(resultFile => {
     'utf8'
   ));
 
-  // Check each race in results file
   resultData.races.forEach(raceResult => {
-    // Compare with horses from race card
     horses.forEach(horse => {
-      // Look for matches based on horse name OR jockey
-      const match = raceResult.results.find(res => 
-        res.horseName === horse.name || res.jockey === horse.jockey
+      // Track horse performances
+      const horseMatch = raceResult.results.find(res => 
+        res.horseName === horse.name
       );
+      
+      if (horseMatch) {
+        if (!horsePerformances[horse.name]) {
+          horsePerformances[horse.name] = [];
+        }
+        // Keep only last 3 matches with newest first
+        if (horsePerformances[horse.name].length < 3) {
+          horsePerformances[horse.name].unshift(horseMatch.position);
+        }
+      }
 
-      if (match) {
-        performances.push({
-          horseNumber: horse.number,
-          horseName: horse.name,
-          jockey: horse.jockey,
-          recentForm: horse.recentForm,
-          rating: horse.rating,
-          performance: match.position
-        });
+      // Track jockey performances
+      const jockeyMatch = raceResult.results.find(res => 
+        res.jockey === horse.jockey
+      );
+      
+      if (jockeyMatch) {
+        if (!jockeyPerformances[horse.jockey]) {
+          jockeyPerformances[horse.jockey] = [];
+        }
+        // Keep only last 3 matches with newest first
+        if (jockeyPerformances[horse.jockey].length < 3) {
+          jockeyPerformances[horse.jockey].unshift(jockeyMatch.position);
+        }
       }
     });
   });
@@ -76,9 +89,17 @@ Race Details:
 
 Horses in the Race:
 
-${performances
-  .map(horse => `- Horse #${horse.horseNumber} (${horse.horseName}) - Jockey: ${horse.jockey}, Rating: ${horse.rating}, Recent Form: ${horse.recentForm}`)
-  .join('\n')}
+${horses.map(horse => {
+  const horseHistory = horsePerformances[horse.name] || [];
+  const jockeyHistory = jockeyPerformances[horse.jockey] || [];
+  
+  return `- Horse #${horse.number} (${horse.name})
+   Jockey: ${horse.jockey} 
+   Recent Jockey Form: ${jockeyHistory.slice(-3).join(', ') || 'No recent data'}
+   Horse Form: ${horse.recentForm.split('/').slice(0, 3).join('/')}
+   Past Positions: ${horseHistory.slice(-3).join(', ') || 'No recent data'}
+   Rating: ${horse.rating}`;
+}).join('\n\n')}
 
 Please provide your prediction of the finishing order, considering factors like form consistency, jockey performance, and any potential upsets.`;
 
