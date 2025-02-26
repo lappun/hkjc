@@ -45,10 +45,10 @@ resultFiles.forEach(resultFile => {
   resultData.races.forEach(raceResult => {
     horses.forEach(horse => {
       // Track horse performances
-      const horseMatch = raceResult.results.find(res => 
+      const horseMatch = raceResult.results.find(res =>
         res.horseName === horse.name
       );
-      
+
       if (horseMatch) {
         if (!horsePerformances[horse.name]) {
           horsePerformances[horse.name] = [];
@@ -60,10 +60,10 @@ resultFiles.forEach(resultFile => {
       }
 
       // Track jockey performances
-      const jockeyMatch = raceResult.results.find(res => 
+      const jockeyMatch = raceResult.results.find(res =>
         res.jockey === horse.jockey
       );
-      
+
       if (jockeyMatch) {
         if (!jockeyPerformances[horse.jockey]) {
           jockeyPerformances[horse.jockey] = [];
@@ -81,6 +81,7 @@ resultFiles.forEach(resultFile => {
 const prompt = `Based on the following information about an upcoming horse race, predict the likely finishing order. Focus on each horse's recent form and any patterns that might indicate potential outcomes.
 
 Race Details:
+- Title: "${raceData.title}"
 - Date: ${raceData.date}
 - Track: ${raceData.track}
 - Distance: ${raceData.distance}
@@ -92,9 +93,9 @@ Horses in the Race:
 ${horses.map(horse => {
   const horseHistory = horsePerformances[horse.name] || [];
   const jockeyHistory = jockeyPerformances[horse.jockey] || [];
-  
+
   return `- Horse #${horse.number} (${horse.name})
-   Jockey: ${horse.jockey} 
+   Jockey: ${horse.jockey}
    Recent Jockey Form: ${jockeyHistory.slice(-3).join(', ') || 'No recent data'}
    Horse Form: ${horse.recentForm.split('/').slice(0, 3).join('/')}
    Past Positions: ${horseHistory.slice(-3).join(', ') || 'No recent data'}
