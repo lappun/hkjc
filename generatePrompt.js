@@ -45,11 +45,10 @@ resultFiles.forEach(resultFile => {
   resultData.races.forEach(raceResult => {
     // Compare with horses from race card
     horses.forEach(horse => {
-      // Look for matches based on horse name and jockey
-      const match = raceResult.results.find(res => {
-        console.log('horse', res.horseName, horse.name);
-        return res.horseName === horse.name && res.jockey === horse.jockey
-      });
+      // Look for matches based on horse name OR jockey
+      const match = raceResult.results.find(res => 
+        res.horseName === horse.name || res.jockey === horse.jockey
+      );
 
       if (match) {
         performances.push({
