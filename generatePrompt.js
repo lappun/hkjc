@@ -54,8 +54,13 @@ resultFiles.forEach(resultFile => {
           horsePerformances[horse.name] = [];
         }
         // Keep only last 3 matches with newest first
+        // Store object with position and race title
+        const entry = { 
+          position: horseMatch.position,
+          raceTitle: raceResult.title
+        };
         if (horsePerformances[horse.name].length < 3) {
-          horsePerformances[horse.name].unshift(horseMatch.position);
+          horsePerformances[horse.name].unshift(entry);
         }
       }
 
@@ -69,8 +74,12 @@ resultFiles.forEach(resultFile => {
           jockeyPerformances[horse.jockey] = [];
         }
         // Keep only last 3 matches with newest first
+        const entry = {
+          position: jockeyMatch.position,
+          raceTitle: raceResult.title
+        };
         if (jockeyPerformances[horse.jockey].length < 3) {
-          jockeyPerformances[horse.jockey].unshift(jockeyMatch.position);
+          jockeyPerformances[horse.jockey].unshift(entry);
         }
       }
     });
@@ -96,9 +105,13 @@ ${horses.map(horse => {
 
   return `- Horse #${horse.number} (${horse.name})
    Jockey: ${horse.jockey}
-   Recent Jockey Form: ${jockeyHistory.slice(-3).join(', ') || 'No recent data'}
+   Recent Jockey Form: ${jockeyHistory.slice(-3).map(e => 
+     `${e.position} (${e.raceTitle})`
+   ).join(', ') || 'No recent data'}
    Horse Form: ${horse.recentForm.split('/').slice(0, 3).join('/')}
-   Past Positions: ${horseHistory.slice(-3).join(', ') || 'No recent data'}
+   Past Performances: ${horseHistory.slice(-3).map(e => 
+     `${e.position} (${e.raceTitle})`
+   ).join(', ') || 'No recent data'}
    Rating: ${horse.rating}`;
 }).join('\n\n')}
 
