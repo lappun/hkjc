@@ -7,7 +7,8 @@ axiosRetry(axios, { retries: 3 });
 
 async function downloadRace(raceNo) {
   const today = new Date().toISOString().split("T")[0].replace(/-/g, "/");
-  const url = `https://racing.hkjc.com/racing/information/Chinese/racing/RaceCard.aspx?RaceDate=${today}&Racecourse=HV&RaceNo=${raceNo}`;
+  const racecourses = ["HV", "ST"];
+  let responseData = null;
   const filename = path.join(
     "races",
     "html",
@@ -15,12 +16,29 @@ async function downloadRace(raceNo) {
   );
 
   try {
-    const response = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    // Try both racecourses
+    for (const racecourse of racecourses) {
+      const url = `https://racing.hkjc.com/racing/information/Chinese/racing/RaceCard.aspx?RaceDate=${today}&Racecourse=${racecourse}&RaceNo=${raceNo}`;
 
-    if (response.data.includes("尚未出版")) {
-      console.log(`Skipping Race ${raceNo} (尚未出版)`);
+      try {
+        const response = await axios.get(url, {
+          headers: { "User-Agent": "Mozilla/5.0" },
+        });
+
+        if (!response.data.includes("尚未出版")) {
+          responseData = response.data;
+          break; // Found valid data, exit loop
+        }
+      } catch (error) {
+        console.error(
+          `Failed Race ${raceNo} at ${racecourse}: ${error.message}`
+        );
+        continue;
+      }
+    }
+
+    if (!responseData) {
+      console.log(`Skipping Race ${raceNo} (尚未出版 at all racecourses)`);
       return;
     }
 
@@ -32,13 +50,13 @@ async function downloadRace(raceNo) {
       // File doesn't exist - proceed with download
     }
 
-    if (existingContent === response.data) {
+    if (existingContent === responseData) {
       console.log(`Skipping Race ${raceNo} (content unchanged)`);
       return;
     }
 
     await fs.mkdir(path.dirname(filename), { recursive: true });
-    await fs.writeFile(filename, response.data);
+    await fs.writeFile(filename, responseData);
     console.log(`Saved: ${filename}`);
   } catch (error) {
     console.error(`Failed Race ${raceNo}: ${error.message}`);
