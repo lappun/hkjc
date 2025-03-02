@@ -5,14 +5,17 @@ const path = require("path");
 
 axiosRetry(axios, { retries: 3 });
 
-async function* generateDates(start, end) {
-  let current = new Date(start);
-  const endDate = new Date(end);
+function generateDates(start, end) {
+  const dates = [];
+  let current = new Date(end);
+  const startDate = new Date(start);
 
-  while (current <= endDate) {
-    yield current.toISOString().split("T")[0].replace(/-/g, "/");
-    current.setDate(current.getDate() + 1);
+  while (current >= startDate) {
+    dates.push(current.toISOString().split("T")[0].replace(/-/g, "/"));
+    current.setDate(current.getDate() - 1);
   }
+
+  return dates;
 }
 
 async function downloadPage(date) {
@@ -70,7 +73,7 @@ async function delay(ms) {
   const endDate = new Date(startDate);
   endDate.setFullYear(startDate.getFullYear() - 1); // One year range
 
-  for await (const date of generateDates(endDate.toISOString().split("T")[0], startDate.toISOString().split("T")[0])) {
+  for (const date of generateDates(endDate.toISOString().split("T")[0], startDate.toISOString().split("T")[0])) {
     const fileExists = await downloadPage(date);
     if (fileExists) {
       console.log(`Stopping job as file exists for date: ${date}`);
